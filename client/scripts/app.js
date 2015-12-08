@@ -2,9 +2,9 @@
 //https://api.parse.com/1/classes/chatterbox
 var app = {
   init: function(){
-    $(".username").on("click", app.addFriend());
-    $("#send .submit").on("submit", app.handleSubmit());
-    
+    $(".username").on("click", app.addFriend);
+    $("#send .submit").on("submit", app.handleSubmit);
+    app.fetch();
   },
   server: 'https://api.parse.com/1/classes/chatterbox',
   send: function(message){
@@ -39,35 +39,54 @@ var app = {
   },
   userList: {},
   objIdList: {},
-
+  roomList: {},
   addMessage: function(message){
-    if(app.objIdList[message.objectId] === undefined){
+    if(app.objIdList[message.objectId] === undefined &&
+                      message.username !== undefined &&
+                          message.text !== undefined &&
+                      message.roomname !== undefined){
       var name = app.rejector(message.username);
       var post = app.rejector(message.text);
       var room = app.rejector(message.roomname)
       var $chatbox = $('<div class="chatbox"></div>');
       $chatbox.append('<div class="username">'+name+' :</div>');
       $chatbox.append('<div class="message">'+post+'</div>');
-      $chatbox.append('<div class="room">'+room+'</div>');
+      $chatbox.append('<div class="room">'+room+' '+message.objectId+'</div>');
       $('#chats').prepend($chatbox);
-      if(app.userList[name] === undefined && name !== undefined ){  
-        $('.users').append('<option value='+name+'>'+name+'</option>')
-        app.userList[name] = name;
-      }
+      // if(app.userList[name] === undefined && name !== undefined ){  
+      //   $('.users').append('<option value='+name+'>'+name+'</option>')
+      //   app.userList[name] = name;
+      // }
+      app.addRoom(room);
+      app.addFriend(name);
       app.objIdList[message.objectId] = message.objectId;
     }    // $(".username").on( "click", function(){app.addFriend()} );
   },
 
   addRoom: function(roomName){
-    var $room = $('<div class="room">'+ roomName +'</div>');
-    $("#roomSelect").append($room);
+    if(roomName && app.roomList[roomName] === undefined){
+      $("#roomSelect").append('<option value='+roomName+'>'+ roomName +'</option>');
+      app.roomList[roomName] = roomName;
+    }
   },
 
-  addFriend: function(){
-    
+  addFriend: function(name){
+    if(app.userList[name] === undefined && name !== undefined ){  
+        $('.users').append('<option value='+name+'>'+name+'</option>')
+        app.userList[name] = name;
+      }
   },
-  handleSubmit: function(){
-    // app.send('message')
+  handleSubmit: function(e){
+    e.preventDefault();
+    var message = {};
+    message.username = window.location.search.split('=')[1];
+
+    //get inputs
+    message.text = $("#message").val();
+    message.roomname = $("#roomSelect").val();
+    //place into object
+
+    app.send(message)
   },
   clearMessages: function(){
     var myNode = document.getElementById("chats");
