@@ -2,15 +2,29 @@
 //https://api.parse.com/1/classes/chatterbox
 var app = {
   init: function(){
-    $(".username").on("click", app.addFriend);
-    $("#send .submit").on("submit", app.handleSubmit);
+    $("#roomadd").submit(function(e){
+      e.preventDefault();
+      app.handleRoomSubmit();
+    }); 
+    $(".users").change(function(e){
+      e.preventDefault();
+      app.navToFriend();
+    });
+    $("#send").submit(function(e){
+      e.preventDefault();
+      app.handleSubmit();
+    });  
+    $("#roomSelect").change(function(e){
+      e.preventDefault();
+      app.navToRoom()
+    });
     app.fetch();
   },
   server: 'https://api.parse.com/1/classes/chatterbox',
   send: function(message){
     $.ajax({
       // This is the url you should use to communicate with the parse API server.
-      url: this.server,
+      url: app.server,
       type: 'POST',
       data: JSON.stringify(message),
       contentType: 'application/json',
@@ -25,7 +39,7 @@ var app = {
   },
   fetch: function(){
     $.ajax({
-      url: this.server,
+      url: app.server,
       type: 'GET',
       data: 'jsonp',
       contentType: 'application/json',
@@ -48,10 +62,10 @@ var app = {
       var name = app.rejector(message.username);
       var post = app.rejector(message.text);
       var room = app.rejector(message.roomname)
-      var $chatbox = $('<div class="chatbox"></div>');
-      $chatbox.append('<div class="username">'+name+' :</div>');
+      var $chatbox = $('<div class="chatbox '+room+ ' ' + name + '"></div>');
+      $chatbox.append('<div class="'+name+'">'+name+' :</div>');
       $chatbox.append('<div class="message">'+post+'</div>');
-      $chatbox.append('<div class="room">'+room+' '+message.objectId+'</div>');
+      $chatbox.append('<div class="'+room+'">'+room+'</div>');
       $('#chats').prepend($chatbox);
       // if(app.userList[name] === undefined && name !== undefined ){  
       //   $('.users').append('<option value='+name+'>'+name+'</option>')
@@ -77,16 +91,12 @@ var app = {
       }
   },
   handleSubmit: function(e){
-    e.preventDefault();
     var message = {};
     message.username = window.location.search.split('=')[1];
-
-    //get inputs
     message.text = $("#message").val();
     message.roomname = $("#roomSelect").val();
-    //place into object
-
     app.send(message)
+    $("#message").val('Message');
   },
   clearMessages: function(){
     var myNode = document.getElementById("chats");
@@ -96,8 +106,32 @@ var app = {
   },
   rejector: function(string){
     return string.replace(/[<>&%*+^$;{}()|[\]\\]/g, "");
-  }
+  },
+
+  navToRoom: function(){
+    var room = $('#roomSelect').val();
+    $(".chatbox").show();
+    if(room !== 'All'){
+      $(".chatbox").not("."+room).hide();
+    }
+  },
   
+  navToFriend: function(){
+    var friend = $('.users').val();
+    $(".chatbox").show();
+    if(friend !== 'choose'){
+      $(".chatbox").not("."+friend).hide();
+    }
+  },
+
+  handleRoomSubmit: function() {
+    //get input
+    var newRoom = $("#newroom").val();
+    //call add room with input
+    app.addRoom(newRoom);
+    $("#newroom").val('Add a Room');
+  }
+
 }
 // var userList = {},
 
@@ -107,8 +141,7 @@ setInterval(function(){
     for(var i = 0; i<app.args.length; i++){
       app.addMessage(app.args[i]);
     }
-  }, 5000)
-
+  }, 500)
 
 
 
